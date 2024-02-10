@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { cantBeStrider } from 'src/app/shared/validators/validators';
-import * as regularValidators from '../../../shared/validators/validators-patterns';
-import * as customValidators from '../../../shared/validators/validators';
+//import * as regularValidators from '../../../shared/validators/validators-patterns';
+//import * as customValidators from '../../../shared/validators/validators';
+import { ValidatorsService } from 'src/app/shared/service/validators.service';
+import { EmailValidatorService } from 'src/app/shared/validators/email-validator.service';
 
 @Component({
   templateUrl: './register-page.component.html',
@@ -11,43 +13,44 @@ import * as customValidators from '../../../shared/validators/validators';
 export class RegisterPageComponent {
 
   public myForm: FormGroup = this.fb.group ({
-    name: ['',[Validators.required, Validators.pattern(regularValidators.firstNameAndLastnamePattern) ]],
-    email: ['',[Validators.required, Validators.pattern(regularValidators.emailPattern) ]],
-    username: ['',[ Validators.required, customValidators.cantBeStrider ]],
-    password: ['',[Validators.required]],
-    password2: ['',[Validators.required, Validators.minLength(6)]],
+    name: ['',[Validators.required, Validators.pattern(this.validatorsService.firstNameAndLastnamePattern) ]],
+    //email: ['',[Validators.required, Validators.pattern(this.validatorsService.emailPattern) ],[ new EmailValidatorService()]],
+    email: ['',[Validators.required, Validators.pattern(this.validatorsService.emailPattern) ],[ this.emailValidatorService ]],
+    username: ['',[ Validators.required, this.validatorsService.cantBeStrider ]],
+    password: ['',[Validators.required, Validators.minLength(6)]],
+    password2: ['',[Validators.required]],
     // favoriteGames: this.fb.array([
     //   ['Metal Gear', Validators.required],
     //   ['Death Stranding', Validators.required],
     // ])
+  },
+  {
+    validators: [
+      this.validatorsService.isFieldOneEqualFieldTwo('password','password2')
+    ]
   })
 
   public newFavorite: FormControl = new FormControl('',Validators.required);
 
-  constructor( private fb: FormBuilder){
+  constructor(
+    private fb: FormBuilder,
+    private validatorsService: ValidatorsService,
+    private emailValidatorService: EmailValidatorService,
+    ){
 
   }
 
-  isValidField( field: string ): boolean | null{
+  isValidField( field: string ){
 
-    return this.myForm.controls[field].errors
-        && this.myForm.controls[field].touched;
+    return this.validatorsService.isValidField(this.myForm, field)
 
   }
 
-  onSubmit():void{
-
-    if ( this.myForm.invalid ) {
+  onSubmit(){
 
         this.myForm.markAllAsTouched();
+        console.log(this.myForm);
 
-        return;
-
-    }
-
-      console.log(this.myForm.value);
-
-      this.myForm.reset();
 
   }
 
